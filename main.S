@@ -1,3 +1,11 @@
+; tihello
+;
+; This is an example of how to minimally display "Hello World" on a TI-84+.
+; I went with a glyph size of 5x7 (6x8 with padding), which is what TIOS mostly
+; displays.
+; The screen being 95x63. that gives us a 16x8 screen, glyph-wise (the last
+; line/col doesn't need a padding)
+
 ; Header
 
 	jp	boot
@@ -22,6 +30,7 @@ PORT_INT_TRIG		.equ	0x04
 INT_TRIG_ON		.equ	0x00
 
 PORT_LCD_CMD		.equ	0x10
+LCD_CMD_6BIT		.equ	0x00
 LCD_CMD_ENABLE		.equ	0x03
 LCD_CMD_COL		.equ	0x20
 LCD_CMD_ROW		.equ	0x80
@@ -46,7 +55,19 @@ boot:
 
 main:
 	call	lcdInit
-	call	lcdFill
+	ld	a, 0
+	call	lcdSetCol
+	ld	a, 0
+	call	lcdSetRow
+	ld	hl, letterA
+	call	lcdSendGlyph
+
+	ld	a, 1
+	call	lcdSetCol
+	ld	a, 0
+	call	lcdSetRow
+	ld	hl, letterH
+	call	lcdSendGlyph
 .loop:
 	jr	.loop
 
@@ -81,21 +102,41 @@ lcdInit:
 	ld	a, LCD_CMD_CONTRAST + 0x34
 	call	lcdWait
 	out	(PORT_LCD_CMD), a
+
+	; Enable 6-bit mode.
+	ld	a, LCD_CMD_6BIT
+	call	lcdWait
+	out	(PORT_LCD_CMD), a
+
 	ret
 
-lcdFill:
-	; place our "RAM cursor" at pos (0, 0)
-	ld	a, LCD_CMD_COL + 0
+; Set LCD's current column to A
+lcdSetCol:
+	; The col index specified in A is compounded with LCD_CMD_COL
+	add	a, LCD_CMD_COL
 	call	lcdWait
 	out	(PORT_LCD_CMD), a
-	ld	a, LCD_CMD_ROW + 0
-	call	lcdWait
-	out	(PORT_LCD_CMD), a
+	ret
 
-	; fill all 8 pixels at that pos
-	ld	a, 0xff
+; Set LCD's current row to A
+lcdSetRow:
+	; The col index specified in A is compounded with LCD_CMD_COL
+	add	a, LCD_CMD_ROW
+	call	lcdWait
+	out	(PORT_LCD_CMD), a
+	ret
+
+; Send the 6x5 glyph that HL points to to the LCD, at its current position.
+; After having called this, the LCD's position will have advanced by one
+; position
+lcdSendGlyph:
+	ld	b, 7
+.loop:
+	ld	a, (hl)
+	inc	hl
 	call	lcdWait
 	out	(PORT_LCD_DATA), a
+	djnz	.loop
 	ret
 
 handleInterrupt:
@@ -120,3 +161,24 @@ handleInterrupt:
 	pop	af
 	ei
 	reti
+
+; Data
+; Letters are sent in 6-bit mode. highest 2 bits are irrelevant. In addition
+; to this, the first column is always empty, for padding. So, 5-bit wide glyphs.
+letterA:
+.db	0b01110
+.db	0b10001
+.db	0b10001
+.db	0b11111
+.db	0b10001
+.db	0b10001
+.db	0b10001
+
+letterH:
+.db	0b10001
+.db	0b10001
+.db	0b10001
+.db	0b11111
+.db	0b10001
+.db	0b10001
+.db	0b10001
