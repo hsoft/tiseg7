@@ -32,6 +32,8 @@ INT_TRIG_ON		.equ	0x00
 PORT_LCD_CMD		.equ	0x10
 LCD_CMD_6BIT		.equ	0x00
 LCD_CMD_ENABLE		.equ	0x03
+LCD_CMD_XINC		.equ	0x05
+LCD_CMD_YINC		.equ	0x07
 LCD_CMD_COL		.equ	0x20
 LCD_CMD_ROW		.equ	0x80
 LCD_CMD_CONTRAST	.equ	0xc0
@@ -57,16 +59,31 @@ main:
 	call	lcdInit
 	ld	a, 0
 	call	lcdSetCol
-	ld	a, 0
-	call	lcdSetRow
-	ld	hl, letterA
-	call	lcdSendGlyph
 
-	ld	a, 1
-	call	lcdSetCol
-	ld	a, 0
-	call	lcdSetRow
 	ld	hl, letterH
+	call	lcdSendGlyph
+	; no need to set col, it's been incremented already
+	ld	hl, letterE
+	call	lcdSendGlyph
+	ld	hl, letterL
+	call	lcdSendGlyph
+	ld	hl, letterL
+	call	lcdSendGlyph
+	ld	hl, letterO
+	call	lcdSendGlyph
+	ld	hl, letterBlank
+	call	lcdSendGlyph
+	ld	hl, letterW
+	call	lcdSendGlyph
+	ld	hl, letterO
+	call	lcdSendGlyph
+	ld	hl, letterR
+	call	lcdSendGlyph
+	ld	hl, letterL
+	call	lcdSendGlyph
+	ld	hl, letterD
+	call	lcdSendGlyph
+	ld	hl, letterExclamation
 	call	lcdSendGlyph
 .loop:
 	jr	.loop
@@ -108,6 +125,11 @@ lcdInit:
 	call	lcdWait
 	out	(PORT_LCD_CMD), a
 
+	; Enable X-increment mode
+	ld	a, LCD_CMD_XINC
+	call	lcdWait
+	out	(PORT_LCD_CMD), a
+
 	ret
 
 ; Set LCD's current column to A
@@ -126,10 +148,16 @@ lcdSetRow:
 	out	(PORT_LCD_CMD), a
 	ret
 
-; Send the 6x5 glyph that HL points to to the LCD, at its current position.
+; Send the 5x7 glyph that HL points to to the LCD, at its current position.
 ; After having called this, the LCD's position will have advanced by one
 ; position
 lcdSendGlyph:
+	; For the purpose of this program, we only write on the first line.
+	; We can assume that we always start at row 0.
+	ld	a, 0
+	call	lcdSetRow
+
+	; loop 7 times
 	ld	b, 7
 .loop:
 	ld	a, (hl)
@@ -137,6 +165,24 @@ lcdSendGlyph:
 	call	lcdWait
 	out	(PORT_LCD_DATA), a
 	djnz	.loop
+
+	; Now that we've sent our 7 rows of pixels, let's go in "Y-increment"
+	; mode to let the LCD increase by one column after we've sent our 8th
+	; line, which is blank (padding).
+	ld	a, LCD_CMD_YINC
+	call	lcdWait
+	out	(PORT_LCD_CMD), a
+
+	; send blank line
+	ld	a, 0x00
+	call	lcdWait
+	out	(PORT_LCD_DATA), a
+
+	; go back in X-increment mode
+	ld	a, LCD_CMD_XINC
+	call	lcdWait
+	out	(PORT_LCD_CMD), a
+
 	ret
 
 handleInterrupt:
@@ -165,6 +211,15 @@ handleInterrupt:
 ; Data
 ; Letters are sent in 6-bit mode. highest 2 bits are irrelevant. In addition
 ; to this, the first column is always empty, for padding. So, 5-bit wide glyphs.
+letterBlank:
+.db	0b00000
+.db	0b00000
+.db	0b00000
+.db	0b00000
+.db	0b00000
+.db	0b00000
+.db	0b00000
+
 letterA:
 .db	0b01110
 .db	0b10001
@@ -174,6 +229,24 @@ letterA:
 .db	0b10001
 .db	0b10001
 
+letterD:
+.db	0b11110
+.db	0b10001
+.db	0b10001
+.db	0b10001
+.db	0b10001
+.db	0b10001
+.db	0b11110
+
+letterE:
+.db	0b11111
+.db	0b10000
+.db	0b10000
+.db	0b11100
+.db	0b10000
+.db	0b10000
+.db	0b11111
+
 letterH:
 .db	0b10001
 .db	0b10001
@@ -182,3 +255,49 @@ letterH:
 .db	0b10001
 .db	0b10001
 .db	0b10001
+
+letterL:
+.db	0b10000
+.db	0b10000
+.db	0b10000
+.db	0b10000
+.db	0b10000
+.db	0b10000
+.db	0b11111
+
+letterO:
+.db	0b01110
+.db	0b10001
+.db	0b10001
+.db	0b10001
+.db	0b10001
+.db	0b10001
+.db	0b01110
+
+letterR:
+.db	0b11110
+.db	0b10001
+.db	0b10001
+.db	0b11110
+.db	0b10001
+.db	0b10001
+.db	0b10001
+
+letterW:
+.db	0b10001
+.db	0b10001
+.db	0b10001
+.db	0b10101
+.db	0b10101
+.db	0b10101
+.db	0b01010
+
+letterExclamation:
+.db	0b00100
+.db	0b01110
+.db	0b01110
+.db	0b01110
+.db	0b00100
+.db	0b00000
+.db	0b00100
+
