@@ -33,9 +33,12 @@ boot:
 	set INT_MASK_ON, a
 	out (PORT_INT_MASK), a
 
-	; sleep until we press ON
 	im	1		; we need to be in interrupt mode 1
 	ei
+
+	call	lcdOff
+
+	; sleep until we press ON
 	halt
 
 main:
@@ -68,9 +71,11 @@ main:
 	call	lcdSendGlyph
 	ld	hl, letterExclamation
 	call	lcdSendGlyph
-.loop:
-	jr	.loop
 
+	call	waitForKey
+	jr	boot
+
+#include "keyboard.S"
 #include "lcd.S"
 #include "interrupt.S"
 

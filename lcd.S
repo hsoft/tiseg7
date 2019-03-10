@@ -42,6 +42,13 @@ lcdInit:
 
 	ret
 
+; Turn LCD off
+lcdOff:
+	ld	a, LCD_CMD_DISABLE
+	call	lcdWait
+	out	(PORT_LCD_CMD), a
+	ret
+
 ; Set LCD's current column to A
 lcdSetCol:
 	; The col index specified in A is compounded with LCD_CMD_COL

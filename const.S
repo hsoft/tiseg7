@@ -1,3 +1,5 @@
+PORT_KEYBOARD		.equ	0x01
+
 PORT_INT_MASK		.equ	0x03
 INT_MASK_ON		.equ	0x00
 
@@ -6,6 +8,7 @@ INT_TRIG_ON		.equ	0x00
 
 PORT_LCD_CMD		.equ	0x10
 LCD_CMD_6BIT		.equ	0x00
+LCD_CMD_DISABLE		.equ	0x02
 LCD_CMD_ENABLE		.equ	0x03
 LCD_CMD_XINC		.equ	0x05
 LCD_CMD_YINC		.equ	0x07
