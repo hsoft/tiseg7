@@ -1,10 +1,12 @@
-# tihello
+# tiseg7
 
-*Show "Hello World!" on a z80-based TI calc, with minimal code*
+Drive my [7 segments multiplexer][seg7] through the link port of a TI-84+
+using a hacked-off cable.
 
-This is an exercise in minimalism. Inspired by [KnightOS][knightos], it tries
-to manage a simple "no-OS" firmware to send to a TI-84+ that shows
-"Hello world!", waits for a key press, then halts.
+This program doesn't display anything on the LCD. It sends digit pressed on the
+keypad directly to the seg7, one at a time, pushing the existing digits left.
+For example, pressing 1, 2, 3, 4, 5 would display 0001, 0012, 0123, 1234, then
+2345.
 
 Most first-hand information comes from [WikiTI][wikiti]
 
@@ -16,7 +18,7 @@ Most first-hand information comes from [WikiTI][wikiti]
 
 ## Status
 
-Initializes the LCD and turns some pixels on.
+Fiddles with link's tip and ring to test.
 
 ## Build
 
@@ -25,7 +27,7 @@ Initializes the LCD and turns some pixels on.
 `make send` builds and sends a firmware update to the calculator using
 [tilp][tilp]
 
+[seg7]: https://github.com/hsoft/seg7-multiplex
 [wikiti]: http://wikiti.brandonw.net/index.php
-[knightos]: https://knightos.org/
 [kosenv]: https://github.com/hsoft/knightosenv
 [tilp]: http://lpg.ticalc.org/prj_tilp/

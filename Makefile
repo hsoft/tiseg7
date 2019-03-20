@@ -9,21 +9,21 @@ ROMLEN = 0x100000
 SOURCES = main.S
 
 .PHONY: all
-all: tihello.rom
+all: tiseg7.rom
 
-tihello.bin: $(SOURCES)
+tiseg7.bin: $(SOURCES)
 	$(AS) $< $@
 
-tihello.rom: tihello.bin
+tiseg7.rom: tiseg7.bin
 	$(MKROM) $@ $(ROMLEN) $<:0x0000
 
 .PHONY: run
-run: tihello.rom
+run: tiseg7.rom
 	$(EMU) -d $(PLATFORM) --no-rom-check $<
 
-tihello.8xu: tihello.rom
+tiseg7.8xu: tiseg7.rom
 	$(MKTIUPGRADE) -p -k kosenv/kernel/keys/0A.key -d TI-84+ $< $@ 00
 
 .PHONY: send
-send: tihello.8xu
+send: tiseg7.8xu
 	tilp -n --calc ti84+ --cable DirectLink $<

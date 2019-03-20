@@ -1,10 +1,5 @@
-; tihello
+; tiseg7
 ;
-; This is an example of how to minimally display "Hello World" on a TI-84+.
-; I went with a glyph size of 5x7 (6x8 with padding), which is what TIOS mostly
-; displays.
-; The screen being 95x63. that gives us a 16x8 screen, glyph-wise (the last
-; line/col doesn't need a padding)
 
 #include "const.S"
 
@@ -36,48 +31,31 @@ boot:
 	im	1		; we need to be in interrupt mode 1
 	ei
 
-	call	lcdOff
-
 	; sleep until we press ON
 	halt
 
 main:
-	call	lcdInit
-	ld	a, 0
-	call	lcdSetCol
+	; Disable link assist
+	; We need to do that to control tip and ring directly
+	in	a, (PORT_LINK_ASSIST)
+	set	LINK_ASSIST_DISABLE, a
+	out	(PORT_LINK_ASSIST), a
 
-	ld	hl, letterH
-	call	lcdSendGlyph
-	; no need to set col, it's been incremented already
-	ld	hl, letterE
-	call	lcdSendGlyph
-	ld	hl, letterL
-	call	lcdSendGlyph
-	ld	hl, letterL
-	call	lcdSendGlyph
-	ld	hl, letterO
-	call	lcdSendGlyph
-	ld	hl, letterBlank
-	call	lcdSendGlyph
-	ld	hl, letterW
-	call	lcdSendGlyph
-	ld	hl, letterO
-	call	lcdSendGlyph
-	ld	hl, letterR
-	call	lcdSendGlyph
-	ld	hl, letterL
-	call	lcdSendGlyph
-	ld	hl, letterD
-	call	lcdSendGlyph
-	ld	hl, letterExclamation
-	call	lcdSendGlyph
+	; Set link "tip" and reset "ring"
+	in	a, (PORT_LINK)
+	set	LINK_TIP, a
+	res	LINK_RING, a
+	out	(PORT_LINK), a
 
 	call	waitForKey
+
+	; Do the opposite
+	in	a, (PORT_LINK)
+	res	LINK_TIP, a
+	set	LINK_RING, a
+	out	(PORT_LINK), a
+
 	jr	boot
 
 #include "keyboard.S"
-#include "lcd.S"
 #include "interrupt.S"
-
-; Data
-#include "letter.S"
