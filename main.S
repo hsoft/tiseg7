@@ -43,6 +43,20 @@ boot:
 	halt
 
 main:
+	; setup stack
+	ld	hl, STACK_START
+	ld	sp, hl
+
+	; setup digits
+	ld	a, 4
+	ld	(DIGITS), a
+	ld	a, 8
+	ld	(DIGITS+1), a
+	ld	a, 3
+	ld	(DIGITS+2), a
+	ld	a, 1
+	ld	(DIGITS+3), a
+
 	; Disable link assist
 	; We need to do that to control tip and ring directly
 	in	a, (PORT_LINK_ASSIST)
@@ -60,45 +74,66 @@ main:
 	call	delay50us
 	call	delay50us
 
-	ld	hl, DIGIT_TO_SEND
-	ld	a, 4
-	ld	(hl), a
-	call	senddigit
+	ld	hl, DIGITS
+	call	senddigits
 
-	ld	a, 8
-	ld	(hl), a
-	call	senddigit
+	;ld	hl, DIGITS+1
+	;call	senddigit
 
-	ld	a, 2
-	ld	(hl), a
-	call	senddigit
+	;ld	hl, DIGITS+2
+	;call	senddigit
 
-	ld	a, 1
-	ld	(hl), a
-	call	senddigit
+	;ld	hl, DIGITS+3
+	;call	senddigit
 
-	ld	a, 15
-	ld	(hl), a
-	call	senddigit
+	;ld	a, 15
+	;ld	(hl), a
+	;call	senddigit
 	
 	call	waitForKey
 	jr	boot
 
+; Send the 4 digits pointed to by HL (which points to the first of 4 bytes
+; in memory) as well as a checksum byte at the end.
+senddigits:
+	push	af
+	push	bc
+
+	ld	a, 0
+	ld	(CHECKSUM), a
+
+	ld	b, 4
+.loop:	
+	call	senddigit
+
+	; digit sent. now, let's add its value to our checksum
+	ld	a, (CHECKSUM)
+	add	a, (hl)
+	ld	(CHECKSUM), a
+	inc	hl
+	djnz	.loop
+
+	ld	hl, CHECKSUM
+	call	senddigit
+
+	pop	bc
+	pop	af
+	ret
+
 ; Send the 5 rightmost bits of (HL) in the link
 senddigit:
-	; In the operations below, we use general bit arithmetics. However,
-	; when clocking that data, we need to invert the bit because a set
-	; LINK_RING bit makes the ring line *low*. Because of that, we XOR
-	; our value.
-	ld	a, (hl)
-	xor	0x1f
-	ld	(hl), a
+	push	af
 
 	; Let's start with the 5th bit. We want it to be on the 2nd position
-	; (LINK_RING = 0x01). A is already loaded from xor above.
+	; (LINK_RING = 0x01).
+	ld	a, (hl)
 	rra
 	rra
 	rra
+	; When clocking that data, we need to invert the bit because a set
+	; LINK_RING bit makes the ring line *low*. Because of that, we XOR
+	; our value.
+	xor	0x02
 	; Alright! Now, let's clock!
 	call	clock
 
@@ -106,22 +141,27 @@ senddigit:
 	ld	a, (hl)
 	rra
 	rra
+	xor	0x02
 	call	clock
 
 	; 3rd
 	ld	a, (hl)
 	rra
+	xor	0x02
 	call	clock
 
 	; 2nd is easy :)
 	ld	a, (hl)
+	xor	0x02
 	call	clock
 
 	; and last
 	ld	a, (hl)
 	rla
+	xor	0x02
 	call	clock
 
+	pop	af
 	ret
 
 ; clock TIP up, then down so that we send the bit currently in RING down.
@@ -137,11 +177,15 @@ clock:
 ; at 15mhz, we need 750 cycles to delay by 50us. Each DJNZ unmet call is 13
 ; cycles, so we need to loop 57 times.
 delay50us:
+	push	bc
+
 	ld	b, 0x39;
 .loop:
 	nop
 	nop
 	djnz	.loop
+
+	pop	bc
 	ret
 
 #include "keyboard.S"

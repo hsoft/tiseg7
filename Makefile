@@ -7,11 +7,12 @@ MKROM = $(BINDIR)/mkrom
 ROMLEN = 0x100000
 
 SOURCES = main.S
+INCLUDES = const.S interrupt.S keyboard.S
 
 .PHONY: all
 all: tiseg7.rom
 
-tiseg7.bin: $(SOURCES)
+tiseg7.bin: $(SOURCES) $(INCLUDES)
 	$(AS) $< $@
 
 tiseg7.rom: tiseg7.bin
