@@ -1,3 +1,5 @@
+; I/O
+
 PORT_LINK		.equ	0x00
 LINK_TIP		.equ	0x00
 LINK_RING		.equ	0x01
@@ -12,3 +14,8 @@ INT_TRIG_ON		.equ	0x00
 
 PORT_LINK_ASSIST	.equ	0x08
 LINK_ASSIST_DISABLE	.equ	0x07
+
+; Memory
+RAM_START		.equ	0xc000
+
+DIGIT_TO_SEND		.equ	RAM_START
