@@ -10,6 +10,10 @@ For example, pressing 1, 2, 3, 4, 5 would display 0001, 0012, 0123, 1234, then
 
 Most first-hand information comes from [WikiTI][wikiti]
 
+Click on the image below for a video:
+
+[![vimeo](https://i.vimeocdn.com/video/771294303_677x.jpg)](https://vimeo.com/327108521)
+
 ## Prerequisites
 
 * GNU make
