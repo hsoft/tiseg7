@@ -63,7 +63,10 @@ main:
 	set	LINK_ASSIST_DISABLE, a
 	out	(PORT_LINK_ASSIST), a
 
-	call	waitForKey
+.loop:
+	call	waitForDigit
+	ld	hl, DIGITS+3
+	ld	(hl), a
 
 	ld	a, 0
 	set	LINK_RING, a
@@ -77,21 +80,7 @@ main:
 	ld	hl, DIGITS
 	call	senddigits
 
-	;ld	hl, DIGITS+1
-	;call	senddigit
-
-	;ld	hl, DIGITS+2
-	;call	senddigit
-
-	;ld	hl, DIGITS+3
-	;call	senddigit
-
-	;ld	a, 15
-	;ld	(hl), a
-	;call	senddigit
-	
-	call	waitForKey
-	jr	boot
+	jr	.loop
 
 ; Send the 4 digits pointed to by HL (which points to the first of 4 bytes
 ; in memory) as well as a checksum byte at the end.
