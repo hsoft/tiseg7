@@ -48,14 +48,11 @@ main:
 	ld	sp, hl
 
 	; setup digits
-	ld	a, 4
-	ld	(DIGITS), a
-	ld	a, 8
-	ld	(DIGITS+1), a
-	ld	a, 3
-	ld	(DIGITS+2), a
-	ld	a, 1
-	ld	(DIGITS+3), a
+	ld	a, 0
+	call	pushdigit
+	call	pushdigit
+	call	pushdigit
+	call	pushdigit
 
 	; Disable link assist
 	; We need to do that to control tip and ring directly
@@ -65,8 +62,7 @@ main:
 
 .loop:
 	call	waitForDigit
-	ld	hl, DIGITS+3
-	ld	(hl), a
+	call	pushdigit
 
 	ld	a, 0
 	set	LINK_RING, a
@@ -81,6 +77,30 @@ main:
 	call	senddigits
 
 	jr	.loop
+
+
+; shift all digits in DIGITS to the left, discarding the leftmost one, then
+; set the rightmost one to the value in A
+pushdigit:
+	push	ix
+	push	bc
+	push	af	; keep it for after we've pushed our digits left
+
+	ld	ix, DIGITS
+	ld	b, 3
+.loop:
+	ld	a, (ix+1)
+	ld	(ix), a
+	inc	ix
+	djnz	.loop
+	
+	pop	af	; bring back the digit we want to push
+
+	ld	(ix), a
+
+	pop	bc
+	pop	ix
+	ret
 
 ; Send the 4 digits pointed to by HL (which points to the first of 4 bytes
 ; in memory) as well as a checksum byte at the end.

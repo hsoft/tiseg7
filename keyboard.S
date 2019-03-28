@@ -1,3 +1,19 @@
+; loop until all keys are de-pressed
+waitForKeysDepressed:
+	push	af
+
+.loop:
+	ld	a, 0xff
+	out	(PORT_KEYBOARD), a
+	ld	a, 0x00
+	out	(PORT_KEYBOARD), a
+	in	a, (PORT_KEYBOARD)
+	inc	a		; if a was 0xff, will become 0 (nz test)
+	jr	nz, .loop	; non-zero? something is pressed
+
+	pop	af
+	ret
+
 ; Wait for a digit to be pressed and sets the A register to the value (0-9) of
 ; that digit.
 ;
@@ -14,18 +30,8 @@
 waitForDigit:
 	push	bc
 
-; loop until all keys are de-pressed
-.loop1:
-	ld	a, 0xff
-	out	(PORT_KEYBOARD), a
-	ld	a, 0x00
-	out	(PORT_KEYBOARD), a
-	in	a, (PORT_KEYBOARD)
-	inc	a		; if a was 0xff, will become 0 (nz test)
-	jr	nz, .loop1	; non-zero? something is pressed
-
 ; loop until a digit is pressed
-.loop2:
+.loop:
 	ld	a, 0xff
 	out	(PORT_KEYBOARD), a
 	; When we check for digits, we go through all 3 groups containing them.
@@ -87,14 +93,13 @@ waitForDigit:
 	bit	3, a
 	jr	z, .end
 
-	jr	.loop2		; nothing happened? loop
+	jr	.loop		; nothing happened? loop
 
 .end:
-	; reset keyboard
-	ld	a, 0xff
-	out	(PORT_KEYBOARD), a
+	call	waitForKeysDepressed
 
 	; copy result into A
 	ld	a, b
+
 	pop	bc
 	ret

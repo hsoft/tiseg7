@@ -18,7 +18,7 @@ Most first-hand information comes from [WikiTI][wikiti]
 
 ## Status
 
-Fiddles with link's tip and ring to test.
+Complete! Does what it's supposed to do!
 
 ## Build
 
